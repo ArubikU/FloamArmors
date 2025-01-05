@@ -1,0 +1,14 @@
+api-version: '1.21'
+name: FloamyArmor
+version: 1.1.0
+main: dev.arubiku.floamyarmor.FloamyArmor
+description: A Minecraft plugin for custom armor management
+authors:
+- ArubikU
+commands:
+    floamyarmor:
+        description: FloamyArmor main command
+        permission: floamyarmor.use
+permissions:
+    floamyarmor.use:
+        description: Allows use of FloamyArmor commands
