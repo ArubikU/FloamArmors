@@ -69,17 +69,17 @@ public class OptifineProcessor {
       folder.mkdirs();
     }
     if (cemLayer1.exists()) {
-      Files.copy(cemLayer1.toPath(), new File(outputFolder, "emf/cem/outer_armor" + id + ".jem").toPath());
+      Files.copy(cemLayer1.toPath(), new File(outputFolder, "emf/cem/outer_armor" + (id + 1) + ".jem").toPath());
     }
     if (cemLayer2.exists()) {
-      Files.copy(cemLayer2.toPath(), new File(outputFolder, "emf/cem/inner_armor" + id + ".jem").toPath());
+      Files.copy(cemLayer2.toPath(), new File(outputFolder, "emf/cem/inner_armor" + (id + 1) + ".jem").toPath());
     }
 
   }
 
   private void editCemFiles(File outputFolder, int id) throws IOException {
-    File cemLayer1 = new File(outputFolder, "emf/cem/outer_armor" + id + ".jem");
-    File cemLayer2 = new File(outputFolder, "emf/cem/inner_armor" + id + ".jem");
+    File cemLayer1 = new File(outputFolder, "emf/cem/outer_armor" + (id + 1) + ".jem");
+    File cemLayer2 = new File(outputFolder, "emf/cem/inner_armor" + (id + 1) + ".jem");
 
     if (cemLayer1.exists()) {
       editJson(cemLayer1, "texture", "textures/armor/" + armorName + "/layer_1.png");
@@ -152,7 +152,7 @@ public class OptifineProcessor {
 
     try (FileWriter writer = new FileWriter(file, true)) {
       for (int i = 0; i < 4; i++) {
-        writer.write("models." + (referencialNumberId + i) + "=" + id + "\n");
+        writer.write("models." + (referencialNumberId + i) + "=" + (id + 1) + "\n");
         writer.write("nbt." + (referencialNumberId + i) + ".Inventory=raw:iregex:.*Slot:" + (103 - i)
             + "b.*?armorcustom:\"" + config.getString("id").replace(":", "") + "\".*?\n");
       }
