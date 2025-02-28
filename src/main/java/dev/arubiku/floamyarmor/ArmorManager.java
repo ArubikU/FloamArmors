@@ -90,24 +90,39 @@ public class ArmorManager {
     generateArmorCordsFile();
   }
 
+  public File getLayerFile(int layer) {
+    if (layer == 1) {
+
+      File armorLayer1 = plugin.getDataFolder().toPath().resolve(INPUT_RP_FOLDER)
+          .resolve("assets/minecraft/textures/models/armor/leather_layer_1.png").toFile();
+
+      if (!armorLayer1.exists()) {
+        // try to fetch from
+        // INPUT_RP_FOLDER/assets/minecraft/textures/entity/equipment/humanoid/leather.png
+        armorLayer1 = plugin.getDataFolder().toPath().resolve(INPUT_RP_FOLDER)
+            .resolve("assets/minecraft/textures/entity/equipment/humanoid/leather.png").toFile();
+      }
+
+      return armorLayer1;
+    } else {
+      File armorLayer2 = plugin.getDataFolder().toPath().resolve(INPUT_RP_FOLDER)
+          .resolve("assets/minecraft/textures/models/armor/leather_layer_2.png").toFile();
+
+      if (!armorLayer2.exists()) {
+        // try to fetch from
+        // INPUT_RP_FOLDER/assets/minecraft/textures/entity/equipment/humanoid_leggings/leather.png
+        armorLayer2 = plugin.getDataFolder().toPath().resolve(INPUT_RP_FOLDER)
+            .resolve("assets/minecraft/textures/entity/equipment/humanoid_leggings/leather.png").toFile();
+      }
+
+      return armorLayer2;
+    }
+  }
+
   private void processInputLayers() {
 
-    File armorLayer1 = plugin.getDataFolder().toPath().resolve(INPUT_RP_FOLDER)
-        .resolve("assets/minecraft/textures/models/armor/leather_layer_1.png").toFile();
-    File armorLayer2 = plugin.getDataFolder().toPath().resolve(INPUT_RP_FOLDER)
-        .resolve("assets/minecraft/textures/models/armor/leather_layer_2.png").toFile();
-    if (!armorLayer1.exists()) {
-      // try to fetch from
-      // INPUT_RP_FOLDER/assets/minecraft/textures/entity/equipment/humanoid/leather.png
-      armorLayer1 = plugin.getDataFolder().toPath().resolve(INPUT_RP_FOLDER)
-          .resolve("assets/minecraft/textures/entity/equipment/humanoid/leather.png").toFile();
-    }
-    if (!armorLayer2.exists()) {
-      // try to fetch from
-      // INPUT_RP_FOLDER/assets/minecraft/textures/entity/equipment/humanoid_leggings/leather.png
-      armorLayer2 = plugin.getDataFolder().toPath().resolve(INPUT_RP_FOLDER)
-          .resolve("assets/minecraft/textures/entity/equipment/humanoid_leggings/leather.png").toFile();
-    }
+    File armorLayer1 = getLayerFile(1);
+    File armorLayer2 = getLayerFile(2);
 
     if (armorLayer1.exists()) {
       processLayer(armorLayer1, 1);
@@ -137,8 +152,12 @@ public class ArmorManager {
       }
 
       FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
-      processFormatLayer(armorDir, config, 1);
-      processFormatLayer(armorDir, config, 2);
+
+      if (config.getString("vanilla_overrides", "false").equals("false")) {
+
+        processFormatLayer(armorDir, config, 1);
+        processFormatLayer(armorDir, config, 2);
+      }
     }
   }
 
@@ -233,8 +252,20 @@ public class ArmorManager {
     saveOutputImage(outputLayer1, "assets/minecraft/textures/models/armor/leather_layer_1.png");
     saveOutputImage(outputLayer2, "assets/minecraft/textures/models/armor/leather_layer_2.png");
 
+    BufferedImage emptyOverlay1 = new BufferedImage(outputLayer1.getWidth(), outputLayer1.getHeight(),
+        BufferedImage.TYPE_INT_ARGB);
+    BufferedImage emptyOverlay2 = new BufferedImage(outputLayer2.getWidth(), outputLayer2.getHeight(),
+        BufferedImage.TYPE_INT_ARGB);
+
+    saveOutputImage(emptyOverlay1, "assets/minecraft/textures/models/armor/leather_layer_1_overlay.png");
+    saveOutputImage(emptyOverlay2, "assets/minecraft/textures/models/armor/leather_layer_2_overlay.png");
+
     saveOutputImage(outputLayer1, "assets/minecraft/textures/entity/equipment/humanoid/leather.png");
     saveOutputImage(outputLayer2, "assets/minecraft/textures/entity/equipment/humanoid_leggings/leather.png");
+    saveOutputImage(emptyOverlay1, "assets/minecraft/textures/entity/equipment/humanoid/leather_overlay.png");
+    saveOutputImage(emptyOverlay2, "assets/minecraft/textures/entity/equipment/humanoid_leggings/leather_overlay.png");
+
+    //
 
     String glslContent = generateGlsl(sortedColors, layout);
     saveArmorCordsFile(glslContent);

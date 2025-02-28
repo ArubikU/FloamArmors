@@ -26,13 +26,13 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 
+import dev.arubiku.floamyarmor.VanillaOverrides.ArmorOverrides;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -77,6 +77,8 @@ public class FloamyArmor extends JavaPlugin {
     return logger;
   }
 
+  private File CompatibilityPlugin = null;
+
   public static Set<String> armors = new HashSet<>();
 
   @Override
@@ -84,6 +86,7 @@ public class FloamyArmor extends JavaPlugin {
     this.logger = new FloamyLogger();
     this.createRequiredFolders();
     this.cleanupFolder("output");
+    this.CompatibilityPlugin = Compatibility.comps(this);
     try {
       this.copyContent(getDataFolder().toPath().resolve("rp").toFile(),
           getDataFolder().toPath().resolve("output").toFile());
@@ -110,6 +113,13 @@ public class FloamyArmor extends JavaPlugin {
     } catch (Throwable e) {
       this.getFLogger().dangerous("Tryied to register commands but not paper loaded");
       e.printStackTrace();
+    }
+
+    if (this.CompatibilityPlugin != null) {
+
+      if (this.CompatibilityPlugin.exists()) {
+        Compatibility.copy(CompatibilityPlugin, this);
+      }
     }
   }
 
@@ -177,6 +187,23 @@ public class FloamyArmor extends JavaPlugin {
   }
 
   // Método para limpiar el contenido de una carpeta
+  public void cleanupFolder(File folder) {
+
+    if (!folder.exists() || !folder.isDirectory()) {
+      return;
+    }
+
+    for (File file : folder.listFiles()) {
+      if (file.isDirectory()) {
+        cleanupFolder(file.getAbsolutePath()); // Recursión para subcarpetas
+        file.delete();
+      } else {
+        file.delete();
+      }
+    }
+  }
+
+  // Método para limpiar el contenido de una carpeta
   private void cleanupFolder(String path) {
     File folder = this.getDataFolder().toPath().resolve(path).toFile();
 
@@ -198,7 +225,7 @@ public class FloamyArmor extends JavaPlugin {
 
   // Método para copiar el contenido de una carpeta a otra
 
-  private void copyContent(File folder, File destination) throws IOException {
+  public void copyContent(File folder, File destination) throws IOException {
     if (!folder.exists() || !folder.isDirectory()) {
       throw new IOException("Folder not exists or not a directory.");
     }
@@ -234,11 +261,21 @@ public class FloamyArmor extends JavaPlugin {
       return;
     }
     FileConfiguration armorConfig = YamlConfiguration.loadConfiguration(config);
-
-    ItemStack helmet = new ItemStack(Material.LEATHER_HELMET);
-    ItemStack chestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
-    ItemStack leggings = new ItemStack(Material.LEATHER_LEGGINGS);
-    ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
+    String armortype = armorConfig.getString("vanilla_overrides", "leather");
+    ArmorOverrides ov = VanillaOverrides.getOverrides(armortype);
+    ItemStack helmet;
+    ItemStack chestplate;
+    ItemStack leggings;
+    ItemStack boots;
+    try {
+      helmet = new ItemStack(Material.valueOf(ov.getSlot(103)));
+      chestplate = new ItemStack(Material.valueOf(ov.getSlot(102)));
+      leggings = new ItemStack(Material.valueOf(ov.getSlot(101)));
+      boots = new ItemStack(Material.valueOf(ov.getSlot(100)));
+    } catch (IllegalArgumentException e) {
+      player.sendMessage(ChatColor.RED + "Invalid material in armor config.");
+      return;
+    }
 
     String[] types = type.toUpperCase().split("-");
     for (String t : types) {
@@ -262,7 +299,8 @@ public class FloamyArmor extends JavaPlugin {
           boots = processStack(boots, armorConfig, ArmorType.VANILLA);
           break;
         default:
-          break;
+          player.sendMessage(ChatColor.RED + "Invalid armor type specified.");
+          return;
       }
     }
     Collection<ItemStack> armor = player.getInventory().addItem(helmet, chestplate, leggings, boots).values();
@@ -272,7 +310,6 @@ public class FloamyArmor extends JavaPlugin {
         player.getWorld().dropItem(player.getLocation(), item);
       }
     }
-
   }
 
   private enum ArmorType {
@@ -300,11 +337,9 @@ public class FloamyArmor extends JavaPlugin {
       }
       case VANILLA: {
         stack.editMeta(meta -> {
-          EquippableComponent equip = meta.getEquippable();
-          equip.setSlot(stack.getType().getEquipmentSlot());
-          equip.setModel(new NamespacedKey("minecraft", config.getString("id").replace(":", "_")));
-          equip.setSwappable(true);
+          meta.setCustomModelData(config.getInt("custom_model_data", 0));
         });
+
         return stack;
       }
 
@@ -331,6 +366,8 @@ public class FloamyArmor extends JavaPlugin {
       sender.sendMessage(ChatColor.RED + "Failed to copy resource files.");
       return;
     }
+    ArmorProcessor.resetOffset();
+    OptifineProcessor.resetFollower();
     this.armorManager = new ArmorManager(this);
     // Reprocess armors
     armorManager.processArmors();
@@ -338,6 +375,16 @@ public class FloamyArmor extends JavaPlugin {
 
     // Notify the sender
     sender.sendMessage(ChatColor.GREEN + "FloamyArmor successfully reloaded.");
+
+    if (this.CompatibilityPlugin != null) {
+      if (!this.CompatibilityPlugin.exists()) {
+        this.CompatibilityPlugin.mkdirs();
+      }
+      if (this.CompatibilityPlugin.exists()) {
+        Compatibility.copy(CompatibilityPlugin, this);
+        sender.sendMessage(ChatColor.GREEN + "FloamyArmor added to" + Compatibility.compa.toString() + ".");
+      }
+    }
   }
 
   private void zipCommand(CommandSender sender) {

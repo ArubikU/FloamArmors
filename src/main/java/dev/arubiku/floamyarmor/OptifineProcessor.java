@@ -10,6 +10,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import dev.arubiku.floamyarmor.VanillaOverrides.ArmorOverrides;
+
 public class OptifineProcessor {
 
   private final FloamyArmor plugin;
@@ -17,6 +19,10 @@ public class OptifineProcessor {
   private final String armorName;
   private static int idFollower = 1;
   private final File armorFolder;
+
+  public static void resetFollower() {
+    idFollower = 1;
+  }
 
   public OptifineProcessor(FloamyArmor plugin, FileConfiguration config, String armorName) {
     this.plugin = plugin;
@@ -49,13 +55,11 @@ public class OptifineProcessor {
       folder.mkdirs();
     }
     if (optifinelayer1.exists()) {
-      // paste on outputfolder/textures/armor/tourne/sculk/layer_2.png
       Files.copy(optifinelayer1.toPath(),
           new File(outputFolder, "textures/armor/" + armorName + "/layer_1.png").toPath());
 
     }
     if (optifinelayer2.exists()) {
-      // paste on outputfolder/textures/armor/tourne/sculk/layer_2.png
       Files.copy(optifinelayer2.toPath(),
           new File(outputFolder, "textures/armor/" + armorName + "/layer_2.png").toPath());
     }
@@ -83,11 +87,66 @@ public class OptifineProcessor {
 
     if (cemLayer1.exists()) {
       editJson(cemLayer1, "texture", "textures/armor/" + armorName + "/layer_1.png");
+      replaceInFile(cemLayer1, "waist", "body");
+      replaceInFile(cemLayer1, "right_shoe", "right_leg");
+      replaceInFile(cemLayer1, "left_shoe", "left_leg");
+      addHeadwearIfNotExists(cemLayer1);
     }
     if (cemLayer2.exists()) {
       editJson(cemLayer2, "texture", "textures/armor/" + armorName + "/layer_2.png");
+      replaceInFile(cemLayer2, "waist", "body");
+      replaceInFile(cemLayer2, "right_shoe", "right_leg");
+      replaceInFile(cemLayer2, "left_shoe", "left_leg");
+      addHeadwearIfNotExists(cemLayer2);
     }
 
+  }
+
+  private void addHeadwearIfNotExists(File jsonFile) throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode rootNode = (ObjectNode) mapper.readTree(jsonFile);
+    ObjectNode headwearNode = mapper.createObjectNode();
+    headwearNode.put("part", "headwear");
+    headwearNode.put("id", "headwear");
+    headwearNode.put("invertAxis", "xy");
+    headwearNode.putArray("translate").add(0).add(-24).add(0);
+
+    boolean headwearExists = false;
+    if (rootNode.has("models") && rootNode.get("models").isArray()) {
+      for (var modelNode : rootNode.withArray("models")) {
+        if (modelNode.has("part") && "headwear".equals(modelNode.get("part").asText())) {
+          headwearExists = true;
+          break;
+        }
+      }
+    }
+
+    if (!headwearExists) {
+      rootNode.withArray("models").add(headwearNode);
+      mapper.writerWithDefaultPrettyPrinter().writeValue(jsonFile, rootNode);
+    }
+  }
+
+  private void addToJsonArray(File jsonFile, String path, Object value) throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode rootNode = (ObjectNode) mapper.readTree(jsonFile);
+    String[] keys = path.split(".");
+    ObjectNode currentNode = rootNode;
+
+    for (int i = 0; i < keys.length - 1; i++) {
+      currentNode = (ObjectNode) currentNode.get(keys[i]);
+      if (currentNode == null) {
+        throw new IllegalArgumentException("Invalid path: " + path);
+      }
+    }
+
+    String arrayKey = keys[keys.length - 1];
+    if (!currentNode.has(arrayKey) || !currentNode.get(arrayKey).isArray()) {
+      throw new IllegalArgumentException("Path does not point to a JSON array: " + path);
+    }
+
+    currentNode.withArray(arrayKey).addPOJO(value);
+    mapper.writerWithDefaultPrettyPrinter().writeValue(jsonFile, rootNode);
   }
 
   private void editJson(File jsonFile, String path, Object value) throws IOException {
@@ -98,7 +157,7 @@ public class OptifineProcessor {
     ObjectNode rootNode = (ObjectNode) mapper.readTree(jsonFile);
 
     // Dividir el path por los puntos para navegar el JSON
-    String[] keys = path.split("\\.");
+    String[] keys = path.split(".");
     ObjectNode currentNode = rootNode;
 
     // Navegar hasta el nodo correspondiente al path
@@ -109,11 +168,28 @@ public class OptifineProcessor {
       }
     }
 
-    // Actualizar el valor en el último nodo del path
-    currentNode.putPOJO(keys[keys.length - 1], value);
+    // Verificar si el path es directo y no tiene hijos
+    if (keys.length - 1 < 0) {
+      rootNode.putPOJO(path, value);
+    } else {
+
+      // Actualizar el valor en el último nodo del path
+      currentNode.putPOJO(keys[keys.length - 1], value);
+    }
 
     // Escribir el JSON actualizado de nuevo en el archivo
     mapper.writerWithDefaultPrettyPrinter().writeValue(jsonFile, rootNode);
+  }
+
+  public void replaceInFile(File file, String target, String replacement) throws IOException {
+    // Read the file content into a string
+    String content = new String(Files.readAllBytes(file.toPath()));
+
+    // Replace the target string with the replacement string
+    content = content.replace(target, replacement);
+
+    // Write the updated content back to the file
+    Files.write(file.toPath(), content.getBytes());
   }
 
   private void updatePropertiesFiles(File outputFolder, String namespace, int id) throws IOException {
@@ -153,8 +229,19 @@ public class OptifineProcessor {
     try (FileWriter writer = new FileWriter(file, true)) {
       for (int i = 0; i < 4; i++) {
         writer.write("models." + (referencialNumberId + i) + "=" + (id + 1) + "\n");
+
+        // vanilla overrides
+        if (!config.getString("vanilla_overrides", "false").equals("false")) {
+
+          ArmorOverrides overrides = VanillaOverrides.getOverrides(config.getString("vanilla_overrides", "false"));
+
+          writer.write("nbt." + (referencialNumberId + i) + ".Inventory=raw:iregex:.*Slot:" + (103 - i)
+              + "b.*?" + overrides.getSlot((103 - i)) + ".*?\n");
+          continue;
+        }
+
         writer.write("nbt." + (referencialNumberId + i) + ".Inventory=raw:iregex:.*Slot:" + (103 - i)
-            + "b.*?armorcustom:\"" + config.getString("id").replace(":", "") + "\".*?\n");
+            + "b.*?" + config.getString("id").replace(":", "_") + ".*?\n");
       }
     }
   }

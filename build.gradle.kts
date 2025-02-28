@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.floamyarmor"
-version = "1.1.0"
+version = "1.1.2a"
 description = "A Minecraft plugin for custom armor management"
 
 java {
@@ -74,6 +74,7 @@ bukkitPluginYaml {
             permission = "floamyarmor.use"
         }
     }
+    loadBefore = listOf("Nexo","ItemsAdder")
     permissions {
         register("floamyarmor.use") {
             description = "Allows use of FloamyArmor commands"

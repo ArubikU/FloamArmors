@@ -26,6 +26,11 @@ public class ArmorProcessor {
   private final FileConfiguration config;
   private final String armorName;
   private final Set<String> usedVariables;
+
+  public static void resetOffset() {
+    offset = 1000;
+  }
+
   private static int offset = 1000;
   private final OptifineProcessor optifineProcessor;
 
@@ -50,7 +55,10 @@ public class ArmorProcessor {
       readdArmorShader(outputFolder);
     }
     copyTextures(outputFolder);
-    writeEquipment(outputFolder);
+
+    if (config.getString("vanilla_overrides", "false").equals("false")) {
+      writeEquipment(outputFolder);
+    }
     if (config.getStringList("versions").contains("optifine")) {
 
       optifineProcessor.process(outputFolder);
@@ -76,27 +84,27 @@ public class ArmorProcessor {
       content = content.replace("<internal-id.b>", String.valueOf(config.getInt("internal-color.b", 0)));
       Files.write(armorPasted.toPath(), content.getBytes());
 
-    }
+      File armorsGlsl = this.plugin.getDataFolder().toPath().resolve(OUTPUT_FOLDER)
+          .resolve("assets/minecraft/shaders/include/mods/armor/armor.glsl")
+          .toFile();
 
-    File armorsGlsl = this.plugin.getDataFolder().toPath().resolve(OUTPUT_FOLDER)
-        .resolve("assets/minecraft/shaders/include/mods/armor/armor.glsl")
-        .toFile();
-
-    if (!armorsGlsl.exists()) {
-
-      armorsGlsl.getParentFile().mkdirs();
-      armorsGlsl.createNewFile();
       if (!armorsGlsl.exists()) {
 
-        throw new IOException("Failed to create armor.glsl file: " + armorsGlsl.getPath());
+        armorsGlsl.getParentFile().mkdirs();
+        armorsGlsl.createNewFile();
+        if (!armorsGlsl.exists()) {
+
+          throw new IOException("Failed to create armor.glsl file: " + armorsGlsl.getPath());
+        }
+      }
+
+      try (FileWriter writer = new FileWriter(armorsGlsl, true)) {
+        writer.write("#moj_import<mods/armor/" + armorName + "/armor.glsl>\n");
+        plugin.getFLogger().info("Added " + armorName + " to armor.glsl");
+
       }
     }
 
-    try (FileWriter writer = new FileWriter(armorsGlsl, true)) {
-      writer.write("#moj_import<mods/armor/" + armorName + "/armor.glsl>\n");
-      plugin.getFLogger().info("Added " + armorName + " to armor.glsl");
-
-    }
   }
 
   private void processGlslFiles(File outputFolder) throws IOException {
@@ -157,10 +165,43 @@ public class ArmorProcessor {
         .toFile();
 
     Color color = new Color(
-        config.getInt("color.r", 0),
-        config.getInt("color.g", 0),
-        config.getInt("color.b", 0));
+        config.getInt("internal-color.r", 0),
+        config.getInt("internal-color.g", 0),
+        config.getInt("internal-color.b", 0));
     ColorApplier baseColor = new ColorApplier(63, 31, color);
+
+    if (!config.getString("vanilla_overrides", "false").equals("false")) {
+      String vanilla = config.getString("vanilla_overrides", "false");
+
+      if (config.getStringList("versions").contains("1_21_3")) {
+
+        if (layer1.exists()) {
+          List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.BLACK));
+          editImage(layer1, colors,
+              new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_1", true)));
+        }
+        if (layer2.exists()) {
+          List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.WHITE));
+          editImage(layer2, colors,
+              new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_2", true)));
+        }
+      }
+      if (config.getStringList("versions").contains("old")) {
+
+        if (layer1.exists()) {
+          List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.BLACK));
+          editImage(layer1, colors,
+              new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_1", false)));
+        }
+        if (layer2.exists()) {
+          List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.WHITE));
+          editImage(layer2, colors,
+              new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_2", false)));
+        }
+      }
+      return;
+    }
+
     if (layer1.exists()) {
       List<ColorApplier> colors = List.of(baseColor, new ColorApplier(63, 30, Color.BLACK));
       editImage(layer1, colors,
@@ -169,7 +210,7 @@ public class ArmorProcessor {
     }
     if (layer2.exists()) {
       List<ColorApplier> colors = List.of(baseColor, new ColorApplier(63, 30, Color.WHITE));
-      editImage(layer1, colors,
+      editImage(layer2, colors,
           new File(outputFolder, "textures/entity/equipment/humanoid_leggings/"
               + config.getString("id").replace(":", "_") + "_layer_2.png"));
     }
@@ -180,6 +221,10 @@ public class ArmorProcessor {
     if (!equipmentFolder.exists() && !equipmentFolder.mkdirs()) {
       throw new IOException("Failed to create equipment folder: " + equipmentFolder.getPath());
     }
+    File equipmentModelFolder = new File(outputFolder, "models/equipment");
+    if (!equipmentModelFolder.exists() && !equipmentModelFolder.mkdirs()) {
+      throw new IOException("Failed to create equipmentModelFolder folder: " + equipmentModelFolder.getPath());
+    }
 
     File equipmentJson = new File(equipmentFolder, config.getString("id").replace(":", "_") + ".json");
     if (!equipmentJson.exists()) {
@@ -189,12 +234,23 @@ public class ArmorProcessor {
         plugin.getFLogger().info("Created equipment json file: " + equipmentJson.getPath());
       }
     }
+    File equipmentModelJson = new File(equipmentModelFolder, config.getString("id").replace(":", "_") + ".json");
+    if (!equipmentModelJson.exists()) {
+      if (!equipmentModelJson.createNewFile()) {
+        throw new IOException("Failed to create equipment json file: " + equipmentModelJson.getPath());
+      } else {
+        plugin.getFLogger().info("Created equipment json file: " + equipmentModelJson.getPath());
+      }
+    }
     Equipment equipment = new Equipment(Map.of(
         "humanoid", List.of(new Equipment.Layer("minecraft:" + config.getString("id").replace(":", "_") + "_layer_1")),
         "humanoid_leggings",
         List.of(new Equipment.Layer("minecraft:" + config.getString("id").replace(":", "_") + "_layer_2"))));
 
     try (FileWriter writer = new FileWriter(equipmentJson)) {
+      OBJECT_MAPPER.writeValue(writer, equipment);
+    }
+    try (FileWriter writer = new FileWriter(equipmentModelJson)) {
       OBJECT_MAPPER.writeValue(writer, equipment);
     }
   }
