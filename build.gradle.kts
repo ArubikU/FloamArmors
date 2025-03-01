@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.floamyarmor"
-version = "1.1.2a"
+version = "1.1.2c"
 description = "A Minecraft plugin for custom armor management"
 
 java {

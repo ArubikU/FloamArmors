@@ -50,7 +50,7 @@ public class Compatibility {
         break;
       }
       case CRAFTENGINE: {
-        plugin.cleanupFolder(pluginFolder.toPath().resolve("contents/floamyarmor/resourcepack/").toFile());
+        plugin.cleanupFolder(pluginFolder.toPath().resolve("resources/floamyarmor/resourcepack/").toFile());
 
         try {
           plugin.copyContent(plugin.getDataFolder().toPath().resolve("output").toFile(),
