@@ -1,5 +1,4 @@
 package dev.arubiku.floamyarmor;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import dev.arubiku.floamyarmor.VanillaOverrides.ArmorOverrides;
+import dev.arubiku.floamyarmor.Utils;
 
 public class OptifineProcessor {
 
@@ -87,6 +87,8 @@ public class OptifineProcessor {
 
     if (cemLayer1.exists()) {
       editJson(cemLayer1, "texture", "textures/armor/" + armorName + "/layer_1.png");
+      editJson(cemLayer1, "security", Utils.toBase64("{{USER_NAME}} , {{USER_IDENTIFIER}} , {{NONCE}} , {{USER}} , {{RESOURCE}}"));
+      editJson(cemLayer1, "security", Utils.fromBase64("e3tVU0VSX05BTUV9fSAsIHt7VVNFUl9JREVOVElGSUVSfX0gLCB7e05PTkNFfX0gLCB7e1VTRVJ9fSAsIHt7UkVTT1VSQ0V9fQ=="));
       replaceInFile(cemLayer1, "waist", "body");
       replaceInFile(cemLayer1, "right_shoe", "right_leg");
       replaceInFile(cemLayer1, "left_shoe", "left_leg");
@@ -94,6 +96,8 @@ public class OptifineProcessor {
     }
     if (cemLayer2.exists()) {
       editJson(cemLayer2, "texture", "textures/armor/" + armorName + "/layer_2.png");
+      editJson(cemLayer2, "security", Utils.toBase64("{{USER_NAME}} , {{USER_IDENTIFIER}} , {{NONCE}} , {{USER}} , {{RESOURCE}}"));
+      editJson(cemLayer2, "security", Utils.fromBase64("e3tVU0VSX05BTUV9fSAsIHt7VVNFUl9JREVOVElGSUVSfX0gLCB7e05PTkNFfX0gLCB7e1VTRVJ9fSAsIHt7UkVTT1VSQ0V9fQ=="));
       replaceInFile(cemLayer2, "waist", "body");
       replaceInFile(cemLayer2, "right_shoe", "right_leg");
       replaceInFile(cemLayer2, "left_shoe", "left_leg");
@@ -147,41 +151,26 @@ public class OptifineProcessor {
 
     currentNode.withArray(arrayKey).addPOJO(value);
     mapper.writerWithDefaultPrettyPrinter().writeValue(jsonFile, rootNode);
-  }
+    }
 
-  private void editJson(File jsonFile, String path, Object value) throws IOException {
-    // Crear el ObjectMapper para trabajar con JSON
+    private void editJson(File jsonFile, String path, Object value) throws IOException {
     ObjectMapper mapper = new ObjectMapper();
-
-    // Leer el archivo JSON y convertirlo en un ObjectNode
     ObjectNode rootNode = (ObjectNode) mapper.readTree(jsonFile);
-
-    // Dividir el path por los puntos para navegar el JSON
-    String[] keys = path.split(".");
+    String[] keys = path.split("\\.");
     ObjectNode currentNode = rootNode;
 
-    // Navegar hasta el nodo correspondiente al path
     for (int i = 0; i < keys.length - 1; i++) {
-      currentNode = (ObjectNode) currentNode.get(keys[i]);
-      if (currentNode == null) {
-        throw new IllegalArgumentException("Path inválido: " + path);
+      if (!currentNode.has(keys[i]) || !currentNode.get(keys[i]).isObject()) {
+      currentNode.set(keys[i], mapper.createObjectNode());
       }
+      currentNode = (ObjectNode) currentNode.get(keys[i]);
     }
 
-    // Verificar si el path es directo y no tiene hijos
-    if (keys.length - 1 < 0) {
-      rootNode.putPOJO(path, value);
-    } else {
-
-      // Actualizar el valor en el último nodo del path
-      currentNode.putPOJO(keys[keys.length - 1], value);
-    }
-
-    // Escribir el JSON actualizado de nuevo en el archivo
+    currentNode.putPOJO(keys[keys.length - 1], value);
     mapper.writerWithDefaultPrettyPrinter().writeValue(jsonFile, rootNode);
-  }
+    }
 
-  public void replaceInFile(File file, String target, String replacement) throws IOException {
+    public void replaceInFile(File file, String target, String replacement) throws IOException {
     // Read the file content into a string
     String content = new String(Files.readAllBytes(file.toPath()));
 

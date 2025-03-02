@@ -1,0 +1,19 @@
+{
+    "sources": [
+        {
+            "source": "entity",
+            "prefix": "entity/",
+            "type": "directory"
+        },
+        {
+            "source": "items",
+            "prefix": "items/",
+            "type": "directory"
+        },
+        {
+            "source": "item",
+            "prefix": "item/",
+            "type": "directory"
+        }
+    ]
+}

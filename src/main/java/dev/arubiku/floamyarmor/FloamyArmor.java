@@ -141,6 +141,20 @@ public class FloamyArmor extends JavaPlugin {
 
                 reloadCommand(context.getSource().getSender());
                 return 1;
+              })).then(Commands.literal("license").executes(context -> {
+
+                  //editJson(cemLayer2, "security", Utils.toBase64("{{USER_NAME}} , {{USER_IDENTIFIER}} , {{NONCE}} , {{USER}} , {{RESOURCE}}"));
+                  //editJson(cemLayer2, "security", Utils.fromBase64("e3tVU0VSX05BTUV9fSAsIHt7VVNFUl9JREVOVElGSUVSfX0gLCB7e05PTkNFfX0gLCB7e1VTRVJ9fSAsIHt7UkVTT1VSQ0V9fQ=="));
+                  //verify if is op
+                  if (!context.getSource().getSender().isOp()) {
+                    return 1;
+                  }
+                  context.getSource().getSender().sendMessage(
+                      MiniMessage.miniMessage().deserialize("<green>FloamyArmor is licensed under the <yellow>MIT</yellow> license."));
+                  //write the identifiers to user
+                  context.getSource().getSender().sendMessage(
+                      MiniMessage.miniMessage().deserialize("<green>Identifiers: <yellow>{{USER_NAME}} , {{USER_IDENTIFIER}} , {{NONCE}} , {{USER}} , {{RESOURCE}}</yellow>"));
+                return 1;
               })).then(Commands.literal("getArmor")
                   .then(Commands.argument("id", StringArgumentType.word()).suggests((context, builder) -> {
                     FloamyArmor.armors.forEach(builder::suggest);
