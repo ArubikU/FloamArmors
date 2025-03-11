@@ -155,6 +155,11 @@ void main() {
         int removeAll = 0;
 
         #moj_import <mods/armor/setup.glsl>
+
+        float RVC_0 = getChannel(RelativeCords,ivec2(63,31), 0);
+        float RVC_1 = getChannel(RelativeCords,ivec2(63,31), 1);
+        float RVC_2 = getChannel(RelativeCords,ivec2(63,31), 2);
+
         #moj_import <mods/armor/armor.glsl>
 
         if(face==TOP_FACE){

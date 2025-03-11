@@ -1,4 +1,4 @@
-/* CEM-Shader. DartCat25
+/* CEM-Shader derived from DartCat25 modified by ArubikU
 *  Fragment functional (set right before main function)
 *  #moj_import <cem/frag_funcs.glsl>
 *  {{USER_NAME}} , {{USER_IDENTIFIER}} , {{NONCE}} , {{USER}} , {{RESOURCE}}

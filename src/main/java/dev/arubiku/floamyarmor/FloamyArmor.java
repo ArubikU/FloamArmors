@@ -165,13 +165,13 @@ public class FloamyArmor extends JavaPlugin {
                             "leather-vanilla", "optifine-leather", "optifine-leather-vanilla");
                         suggestions.forEach(builder::suggest);
                         return builder.buildFuture();
-                      }).executes(context -> {
+                      }))).executes(context -> {
                         Player player = (Player) context.getSource().getSender();
                         String id = StringArgumentType.getString(context, "id");
                         String type = StringArgumentType.getString(context, "type");
                         getArmorCommand(player, id, type);
                         return 1;
-                      }))))
+                      }))
               .build(),
           "some bukkit help description string",
           List.of("floa"));

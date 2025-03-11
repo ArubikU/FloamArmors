@@ -1,4 +1,4 @@
-/* CEM-Shader. DartCat25
+/* CEM-Shader derived from DartCat25 modified by ArubikU
 *  Vertex Setup (set in block if model is cem)
 *  #moj_import <cem/vert_setup.glsl>
 */ 

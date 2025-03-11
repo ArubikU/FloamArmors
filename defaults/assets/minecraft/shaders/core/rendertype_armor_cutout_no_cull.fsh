@@ -65,11 +65,13 @@ void main() {
         if (bodypart != -1) {
             for (int cemId = 0; cemId < 4; cemId++) {
                 int cemi = cems[cemId];
-                if (cemi == -1) continue;
-                
+                if (cemi == -1){
+                    continue;
+                }
                 switch (cemi) {
                     #moj_import <mods/armor/armor.glsl>
                 }
+                
             }
         } else {
             discard;
