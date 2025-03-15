@@ -45,6 +45,7 @@ flat out ivec2 RelativeCords;
 flat out int armorType;
 flat out int isGui;
 flat out int isUpperArmor;
+flat out int markforremove;
 out vec4 cem_color;
 
 float getChannel(ivec2 cords, int channel) {
@@ -107,6 +108,7 @@ void main() {
     lightColor = texelFetch(Sampler2, UV2 / 16, 0);
     texCoord0 = UV0;
     tintColor = Color;
+    markforremove = 0;
     // Armor-specific logic
     RelativeCords = ivec2(0);
     if (true) {
@@ -171,11 +173,13 @@ void main() {
             corner = corner.yx;
             cem_size = 1;
         }else{
-            bodypart = -1;
-            cems = ivec4(-1);
             if(removeAll==1){
+                markforremove = 1;
                 gl_Position = vec4(0,0,0,1);
                 return;
+            }else{
+              bodypart = -1;
+              cems = ivec4(-1);
             }
         }
 

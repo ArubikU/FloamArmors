@@ -37,6 +37,7 @@ flat in ivec4 cems;
 flat in float cem_size;
 flat in int isGui;
 flat in ivec2 RelativeCords;
+flat in int markforremove;
 
 out vec4 fragColor;
 
@@ -49,6 +50,7 @@ vec4 relativeUv(float x, float y, float xlength, float ylength, ivec2 cord) {
 }
 
 void main() {
+    if(markforremove == 1) discard;
     gl_FragDepth = gl_FragCoord.z;
     float vDistance = vertexDistance;
     vec2 texSize = textureSize(Sampler0, 0);
@@ -107,7 +109,6 @@ void main() {
     } else {
         fragColor = linear_fog(color, vDistance, FogStart, FogEnd, FogColor);
     }
-    //fragColor = fragColor * tintColor;
     if (transparency < 1 && emissive != 1 && isGui == 0) {
         fragColor.a = transparency;
     }
