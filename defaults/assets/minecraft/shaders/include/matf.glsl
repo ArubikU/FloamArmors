@@ -25,7 +25,7 @@
 #define PIX3 Rotate3(PI_15, X)
 
 #define PIY Rotate3(PI_05, Y)
-#define PIY25 Rotate3(PI_025, Y)
+#define PIY25 mat3( 0.7071067812, 0.0, 0.7071067812,0.0, 1.0, 0.0, -0.7071067812, 0.0, 0.7071067812)
 #define PIY12 Rotate3(PI_0125, Y)
 #define PIY62 Rotate3(PI_00625, Y)
 #define PIY2 Rotate3(PI_1, Y)

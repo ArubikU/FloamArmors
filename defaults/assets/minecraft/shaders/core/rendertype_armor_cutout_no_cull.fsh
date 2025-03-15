@@ -61,9 +61,9 @@ void main() {
         modelSize /= res.y;
         modelSize *= cem_size;
         
-        mat3 rotMat = Rotate3(PI / 4, Y);
+        mat3 rotMat = PIY25;
         if (bodypart != -1) {
-            for (int cemId = 0; cemId < 4; cemId++) {
+            for (int cemId = 0; cemId < 2; cemId++) {
                 int cemi = cems[cemId];
                 if (cemi == -1){
                     continue;

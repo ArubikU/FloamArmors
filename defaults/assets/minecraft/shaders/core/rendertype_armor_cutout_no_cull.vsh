@@ -139,45 +139,50 @@ void main() {
 
     // Only run CEM logic if not in GUI
     if (isGui == 0) {
-        // CEM logic
+        //texture things
         vec2 texSize = textureSize(Sampler0, 0);
         vec2 uv = floor(texCoord0 * texSize);
         //make it relative
         uv = uv-vec2(RelativeCords.x*64,RelativeCords.y*32);
-
+        // CEM logic
         const vec2[4] corners = vec2[4](vec2(0), vec2(0, 1), vec2(1, 1), vec2(1, 0));
         vec2 corner = corners[gl_VertexID % 4];
 
         int face = (gl_VertexID / 4) % 6;
-        int cube = (gl_VertexID / 24) % 10;
-        bodypart = cube;
 
         int removeAll = 0;
 
-        #moj_import <mods/armor/setup.glsl>
 
+        int cube = (gl_VertexID / 24) % 10;
+        bodypart = cube;
+        
+        #moj_import <mods/armor/setup.glsl>
         float RVC_0 = getChannel(RelativeCords,ivec2(63,31), 0);
         float RVC_1 = getChannel(RelativeCords,ivec2(63,31), 1);
         float RVC_2 = getChannel(RelativeCords,ivec2(63,31), 2);
-
+        if(RVC_0==0 && RVC_1==0 && RVC_2==0){
+            return;
+        }
+        
         #moj_import <mods/armor/armor.glsl>
-
+        
         if(face==TOP_FACE){
-            if(cem != 199 && cem != 198){
-                cem_reverse = 0;
-                corner = corner.yx;
-                cem_size = 1;
-            }
-            
+            cem_reverse = 0;
+            corner = corner.yx;
+            cem_size = 1;
         }else{
             bodypart = -1;
             cems = ivec4(-1);
+            if(removeAll==1){
+                gl_Position = vec4(0,0,0,1);
+                return;
+            }
         }
 
         if (gl_VertexID / 4 == 3)
             corner.x = 1 - corner.x;
 
-        if (cems[0] > 0 || cems[1] > 0 || cems[2] > 0 || cems[3] > 0 || removeAll==1)
+        if (cems[0] > 0 || cems[1] > 0 || cems[2] > 0 || cems[3] > 0 )
         {
             cem=199;
             #moj_import <cem/vert_setup.glsl>
