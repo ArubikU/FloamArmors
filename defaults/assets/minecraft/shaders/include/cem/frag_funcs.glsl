@@ -140,6 +140,46 @@ color = sBoxExt(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySiz
 color = sBoxExt(Rotation * (-center + (matf_verifyPos(pos)+ rotPivot) * modelSize) - rotPivot * modelSize, Rotation * dirTBN, matf_verifySize(size) * modelSize, TBN * inverse(Rotation), color, minT, uSide, dSide, nSide, wSide, sSide, eSide,true); \
 }
 
+#define ADD_BOX_INV_WITH_ROTATION(pos, size, dSide, uSide, nSide, eSide, sSide, wSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle) { \
+    color = sBoxInvWithRotation(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySize(size) * modelSize, TBN, color, minT, uSide, dSide, nSide, wSide, sSide, eSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle,false);\
+}
+
+#define ADD_BOX_INV_WITH_ROTATION_ROTATE(pos, size, Rotation, rotPivot, dSide, uSide, nSide, eSide, sSide, wSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle) { \
+    color = sBoxInvWithRotation(Rotation * (-center + (matf_verifyPos(pos)+ rotPivot) * modelSize) - rotPivot * modelSize, Rotation * dirTBN, matf_verifySize(size) * modelSize, TBN * inverse(Rotation), color, minT, uSide, dSide, nSide, wSide, sSide, eSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle,false); \
+}
+
+#define ADD_BOX_INV(pos, size, dSide, uSide, nSide, eSide, sSide, wSide) { \
+color = sBoxInv(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySize(size) * modelSize, TBN, color, minT, uSide, dSide, nSide, wSide, sSide, eSide,false);\
+}
+
+#define ADD_BOX_ROTATE_INV(pos, size, Rotation, rotPivot, dSide, uSide, nSide, eSide, sSide, wSide) { \
+color = sBoxInv(Rotation * (-center + (matf_verifyPos(pos)+ rotPivot) * modelSize) - rotPivot * modelSize, Rotation * dirTBN, matf_verifySize(size) * modelSize, TBN * inverse(Rotation), color, minT, uSide, dSide, nSide, wSide, sSide, eSide,false); \
+}
+
+#define ADD_BOX_SOLID_INV(pos, size, newColor) { \
+    color = sBoxInv_Solid(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySize(size) * modelSize, TBN, color, minT,newColor,false);\
+}
+
+#define ADD_BOX_INV_WITH_ROTATION_EMISSIVE(pos, size, dSide, uSide, nSide, eSide, sSide, wSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle) { \
+    color = sBoxInvWithRotation(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySize(size) * modelSize, TBN, color, minT, uSide, dSide, nSide, wSide, sSide, eSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle,true);\
+}
+
+#define ADD_BOX_INV_WITH_ROTATION_ROTATE_EMISSIVE(pos, size, Rotation, rotPivot, dSide, uSide, nSide, eSide, sSide, wSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle) { \
+    color = sBoxInvWithRotation(Rotation * (-center + (matf_verifyPos(pos)+ rotPivot) * modelSize) - rotPivot * modelSize, Rotation * dirTBN, matf_verifySize(size) * modelSize, TBN * inverse(Rotation), color, minT, uSide, dSide, nSide, wSide, sSide, eSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle,true); \
+}
+
+#define ADD_BOX_INV_EMISSIVE(pos, size, dSide, uSide, nSide, eSide, sSide, wSide) { \
+color = sBoxInv(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySize(size) * modelSize, TBN, color, minT, uSide, dSide, nSide, wSide, sSide, eSide,true);\
+}
+
+#define ADD_BOX_ROTATE_INV_EMISSIVE(pos, size, Rotation, rotPivot, dSide, uSide, nSide, eSide, sSide, wSide) { \
+color = sBoxInv(Rotation * (-center + (matf_verifyPos(pos)+ rotPivot) * modelSize) - rotPivot * modelSize, Rotation * dirTBN, matf_verifySize(size) * modelSize, TBN * inverse(Rotation), color, minT, uSide, dSide, nSide, wSide, sSide, eSide,true); \
+}
+
+#define ADD_BOX_SOLID_INV_EMISSIVE(pos, size, newColor) { \
+    color = sBoxInv_Solid(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySize(size) * modelSize, TBN, color, minT,newColor,true);\
+}
+
 vec3 planeIntersect(in vec3 ro, in vec3 rd, in vec3 v0, in vec3 v1, in vec3 v2) {
     vec3 v1v0 = v1 - v0;
     vec3 v2v0 = v2 - v0;
@@ -495,9 +535,6 @@ vec4 sBoxExtWithRotation(vec3 ro, vec3 rd, vec3 size, mat3 TBN, vec4 color, inou
 
     return col;
 }
-
-
-
 
 void writeDepth(vec3 Pos)
 {
@@ -927,6 +964,193 @@ vec4 sBox_Solid(vec3 ro, vec3 rd, vec3 size, mat3 TBN, vec4 color, inout float T
 }
 
 vec4 sBoxExt_Solid(vec3 ro, vec3 rd, vec3 size, mat3 TBN, vec4 color, inout float T,vec4 newColor,bool emissive)
+{
+
+    vec2 texSize = textureSize(Sampler0, 0);
+    vec3 normal = VECNULL;
+
+    vec3 box = boxIntersectInv(ro, rd, size, normal,false);
+
+    if (box.z >= T)
+        return color;
+
+    vec4 col = newColor;
+    if(!emissive){
+        
+    col = minecraft_mix_light(Light0_Direction, Light1_Direction, normalize(TBN * normal), col);
+    }
+    T = box.z;
+
+    return col;
+
+}
+
+
+vec4 sBoxInv(vec3 ro, vec3 rd, vec3 size, mat3 TBN, vec4 color, inout float T, vec4 dSide, vec4 uSide, vec4 nSide, vec4 eSide, vec4 sSide, vec4 wSide,bool enableEmissive)
+{
+    vec2 texSize = textureSize(Sampler0, 0);
+    vec3 normal = VECNULL;
+
+    vec3 box = boxIntersectInv(ro, rd, size, normal,true);
+
+    if (box.z >= T)
+        return color;
+
+    vec4 col = VECNULL4;
+
+    if (normal.x > 0.9) //East
+    {
+        col = texture(Sampler0, (eSide.xy + eSide.zw * box.xy) / texSize);
+    }
+    else if (normal.x < -0.9) //West
+    {
+        col = texture(Sampler0, (wSide.xy + wSide.zw * vec2(1 - box.x, box.y)) / texSize);
+    }
+    else if (normal.z > 0.9) //South
+    {
+        col = texture(Sampler0, (sSide.xy + sSide.zw * vec2(1 - box.x, box.y)) / texSize);
+    }
+    else if (normal.z < -0.9) //North
+    {
+        col = texture(Sampler0, (nSide.xy + nSide.zw * box.xy) / texSize);
+    }
+    else if (normal.y > 0.9) //Up
+    {
+        col = texture(Sampler0, (uSide.xy + uSide.zw * box.xy) / texSize);
+    }
+    else if (normal.y < -0.9) //Down
+    {
+        col = texture(Sampler0, (dSide.xy + dSide.zw * box.xy) / texSize);
+    }
+
+    if(!enableEmissive){
+
+    col = minecraft_mix_light(Light0_Direction, Light1_Direction, normalize(TBN * normal), col);
+    }
+
+    if (col.a < 0.1) return color;
+
+    if (col.rgb == VECNULL ){
+        return color;
+    }
+
+    T = box.z;
+
+    return col;
+}
+
+vec4 sBoxInvWithRotation(vec3 ro, vec3 rd, vec3 size, mat3 TBN, vec4 color, inout float T, vec4 dSide, vec4 uSide, vec4 nSide, vec4 eSide, vec4 sSide, vec4 wSide, float dSideRotationAngle, float uSideRotationAngle, float nSideRotationAngle, float eSideRotationAngle, float sSideRotationAngle, float wSideRotationAngle, bool enableEmissive)
+{
+    vec2 texSize = textureSize(Sampler0, 0);
+    vec3 normal = VECNULL;
+
+    if(isInside(ro, rd, size, normal,true)){
+        return color;
+    }
+    vec3 box = boxIntersectInv(ro, rd, size, normal,true);
+
+    if (box.z >= T)
+        return color;
+
+    vec4 col = VECNULL4;
+
+    if (normal.x > 0.9) //East
+    {
+        vec2 rotatedUV = eSide.xy + eSide.zw * box.xy;
+
+        if (eSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = eSide.xy + eSide.zw * box.yx;
+        } else if (eSideRotationAngle == 2.0) {
+            // Rotate UV coordinates 180 degrees clockwise
+            rotatedUV = eSide.xy + eSide.zw * vec2(1.0 - box.x, 1.0 - box.y);
+        } else if (eSideRotationAngle == 3.0) {
+            // Rotate UV coordinates 270 degrees clockwise
+            rotatedUV = eSide.xy + eSide.zw * vec2(1.0 - box.y, box.x);
+        } 
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+    else if (normal.x < -0.9) //West
+    {
+        vec2 rotatedUV = wSide.xy + wSide.zw * vec2(1 - box.x, box.y);
+        if (wSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = wSide.xy + wSide.zw * vec2(box.y, 1.0 - box.x);
+        } else if (wSideRotationAngle == 2.0) {
+            // Rotate UV coordinates 180 degrees clockwise
+            rotatedUV = wSide.xy + wSide.zw * vec2(1.0 - box.x, 1.0 - box.y);
+        } else if (wSideRotationAngle == 3.0) {
+            // Rotate UV coordinates 270 degrees clockwise
+            rotatedUV = wSide.xy + wSide.zw * vec2(1.0 - box.y, box.x);
+        } 
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+    else if (normal.z > 0.9) //South
+    {
+        vec2 rotatedUV = sSide.xy + sSide.zw * vec2(1 - box.x, box.y);
+        if (sSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = sSide.xy + sSide.zw * vec2(box.y, 1.0 - box.x);
+        } else if (sSideRotationAngle == 2.0) {
+            // Rotate UV coordinates 180 degrees clockwise
+            rotatedUV = sSide.xy + sSide.zw * vec2(1.0 - box.x, 1.0 - box.y);
+        } else if (sSideRotationAngle == 3.0) {
+            // Rotate UV coordinates 270 degrees clockwise
+            rotatedUV = sSide.xy + sSide.zw * vec2(1.0 - box.y, box.x);
+        }
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+    else if (normal.z < -0.9) //North
+    {
+        vec2 rotatedUV = nSide.xy + nSide.zw * box.xy;
+        if (nSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = nSide.xy + nSide.zw * box.yx;
+        } else if (nSideRotationAngle == 2.0) {
+            // Rotate UV coordinates 180 degrees clockwise
+            rotatedUV = nSide.xy + nSide.zw * vec2(1.0 - box.x, 1.0 - box.y);
+        } else if (nSideRotationAngle == 3.0) {
+            // Rotate UV coordinates 270 degrees clockwise
+            rotatedUV = nSide.xy + nSide.zw * vec2(1.0 - box.y, box.x);
+        }
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+    else if (normal.y > 0.9) //Up
+    {
+        vec2 rotatedUV = uSide.xy + uSide.zw * box.xy;
+        if (uSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = uSide.xy + uSide.zw * box.yx;
+        } 
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+    else if (normal.y < -0.9) //Down
+    {
+        vec2 rotatedUV = dSide.xy + dSide.zw * box.xy;
+        if (dSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = dSide.xy + dSide.zw * box.yx;
+        } 
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+
+    if(!enableEmissive){
+        col = minecraft_mix_light(Light0_Direction, Light1_Direction, normalize(TBN * normal), col);
+    }
+
+    if (col.a < 0.1) return color;
+
+    if (col.rgb == VECNULL ){
+        return color;
+    }
+
+    T = box.z;
+
+    return col;
+}
+
+
+vec4 sBoxInv_Solid(vec3 ro, vec3 rd, vec3 size, mat3 TBN, vec4 color, inout float T,vec4 newColor,bool emissive)
 {
 
     vec2 texSize = textureSize(Sampler0, 0);

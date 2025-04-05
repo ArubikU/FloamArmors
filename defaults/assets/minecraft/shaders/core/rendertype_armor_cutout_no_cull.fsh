@@ -56,6 +56,7 @@ void main() {
     vec2 texSize = textureSize(Sampler0, 0);
     bool isHead = (texCoord0 * texSize).y <= 16;
     vec4 color = texture(Sampler0, texCoord0);
+    float dynamicEmissive = emissive;
 
     if (cem > 1) {
         #define MINUS_Z
@@ -83,7 +84,7 @@ void main() {
         writeDepth(dir * minT);
         vDistance = minT;
         float opacity = ceil(color.a * 255);
-        if (emissive == 0 && opacity != 128) color *= cem_light;
+        if (dynamicEmissive == 0 && opacity != 128) color *= cem_light;
     }
     
     float opacity = ceil(color.a * 255);
@@ -102,14 +103,14 @@ void main() {
             color *= vertexColor * lightColor;
         }
     }
-    if (emissive == 0) color *= ColorModulator;
+    if (dynamicEmissive == 0) color *= ColorModulator;
 
-    if (emissive == 1) {
+    if (dynamicEmissive == 1) {
         fragColor = color;
     } else {
         fragColor = linear_fog(color, vDistance, FogStart, FogEnd, FogColor);
     }
-    if (transparency < 1 && emissive != 1 && isGui == 0) {
+    if (transparency < 1 && dynamicEmissive != 1 && isGui == 0) {
         fragColor.a = transparency;
     }
 }
