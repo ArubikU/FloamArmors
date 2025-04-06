@@ -75,6 +75,24 @@ color = sTris(-center, dirTBN, p1 * modelSize, p2 * modelSize, p3 * modelSize, c
     color = sBoxWithRotation(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySize(size) * modelSize, TBN, color, minT, uSide, dSide, nSide, wSide, sSide, eSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle,true);\
 }
 
+
+
+#define ADD_BOX_WITH_ROTATION_EMISSIVE(pos, size, dSide, uSide, nSide, eSide, sSide, wSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle) { \
+    color = sBoxWithRotationEmissive(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySize(size) * modelSize, TBN, color, minT, uSide, dSide, nSide, wSide, sSide, eSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle,false);\
+}
+
+#define ADD_BOX_WITH_ROTATION_ROTATE_EMISSIVE(pos, size, Rotation, rotPivot, dSide, uSide, nSide, eSide, sSide, wSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle) { \
+    color = sBoxWithRotationEmissive(Rotation * (-center + (matf_verifyPos(pos)+ rotPivot) * modelSize) - rotPivot * modelSize, Rotation * dirTBN, matf_verifySize(size) * modelSize, TBN * inverse(Rotation), color, minT, uSide, dSide, nSide, wSide, sSide, eSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle,false); \
+}
+
+#define ADD_BOX_WITH_ROTATION_ROTATE_NO_TRANSPARENCY_EMISSIVE(pos, size, Rotation, rotPivot, dSide, uSide, nSide, eSide, sSide, wSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle) { \
+    color = sBoxWithRotationEmissive(Rotation * (-center + (matf_verifyPos(pos)+ rotPivot) * modelSize) - rotPivot * modelSize, Rotation * dirTBN, matf_verifySize(size) * modelSize, TBN * inverse(Rotation), color, minT, uSide, dSide, nSide, wSide, sSide, eSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle,true); \
+}
+#define ADD_BOX_WITH_ROTATION_NO_TRANSPARENCY_EMISSIVE(pos, size, dSide, uSide, nSide, eSide, sSide, wSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle) { \
+    color = sBoxWithRotationEmissive(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySize(size) * modelSize, TBN, color, minT, uSide, dSide, nSide, wSide, sSide, eSide, dSideRotationAngle, uSideRotationAngle, nSideRotationAngle, eSideRotationAngle, sSideRotationAngle, wSideRotationAngle,true);\
+}
+
+
 #define ADD_BOX_NO_TRANSPARENCY(pos, size, dSide, uSide, nSide, eSide, sSide, wSide) { \
 color = sBox(-center + matf_verifyPos(pos)* modelSize, dirTBN, matf_verifySize(size) * modelSize, TBN, color, minT, uSide, dSide, nSide, wSide, sSide, eSide,true);\
 }
@@ -845,6 +863,112 @@ vec4 sBoxWithRotation(vec3 ro, vec3 rd, vec3 size, mat3 TBN, vec4 color, inout f
     }
 
     col = minecraft_mix_light(Light0_Direction, Light1_Direction, normalize(TBN * normal), col);
+
+    if (col.a < 0.1) return color;
+
+    if (col.rgb == VECNULL && !enableTransparency){
+        return color;
+    }
+
+    T = box.z;
+
+    return col;
+}
+vec4 sBoxWithRotationEmissive(vec3 ro, vec3 rd, vec3 size, mat3 TBN, vec4 color, inout float T, vec4 dSide, vec4 uSide, vec4 nSide, vec4 eSide, vec4 sSide, vec4 wSide, float dSideRotationAngle, float uSideRotationAngle, float nSideRotationAngle, float eSideRotationAngle, float sSideRotationAngle, float wSideRotationAngle, bool enableTransparency)
+{
+    vec2 texSize = textureSize(Sampler0, 0);
+    vec3 normal = VECNULL;
+
+    if(isInside(ro, rd, size, normal,enableTransparency)){
+        return color;
+    }
+    vec3 box = boxIntersect(ro, rd, size, normal,enableTransparency);
+
+    if (box.z >= T)
+        return color;
+
+    vec4 col = VECNULL4;
+
+    if (normal.x > 0.9) //East
+    {
+        vec2 rotatedUV = eSide.xy + eSide.zw * box.xy;
+
+        if (eSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = eSide.xy + eSide.zw * box.yx;
+        } else if (eSideRotationAngle == 2.0) {
+            // Rotate UV coordinates 180 degrees clockwise
+            rotatedUV = eSide.xy + eSide.zw * vec2(1.0 - box.x, 1.0 - box.y);
+        } else if (eSideRotationAngle == 3.0) {
+            // Rotate UV coordinates 270 degrees clockwise
+            rotatedUV = eSide.xy + eSide.zw * vec2(1.0 - box.y, box.x);
+        } 
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+    else if (normal.x < -0.9) //West
+    {
+        vec2 rotatedUV = wSide.xy + wSide.zw * vec2(1 - box.x, box.y);
+        if (wSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = wSide.xy + wSide.zw * vec2(box.y, 1.0 - box.x);
+        } else if (wSideRotationAngle == 2.0) {
+            // Rotate UV coordinates 180 degrees clockwise
+            rotatedUV = wSide.xy + wSide.zw * vec2(1.0 - box.x, 1.0 - box.y);
+        } else if (wSideRotationAngle == 3.0) {
+            // Rotate UV coordinates 270 degrees clockwise
+            rotatedUV = wSide.xy + wSide.zw * vec2(1.0 - box.y, box.x);
+        } 
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+    else if (normal.z > 0.9) //South
+    {
+        vec2 rotatedUV = sSide.xy + sSide.zw * vec2(1 - box.x, box.y);
+        if (sSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = sSide.xy + sSide.zw * vec2(box.y, 1.0 - box.x);
+        } else if (sSideRotationAngle == 2.0) {
+            // Rotate UV coordinates 180 degrees clockwise
+            rotatedUV = sSide.xy + sSide.zw * vec2(1.0 - box.x, 1.0 - box.y);
+        } else if (sSideRotationAngle == 3.0) {
+            // Rotate UV coordinates 270 degrees clockwise
+            rotatedUV = sSide.xy + sSide.zw * vec2(1.0 - box.y, box.x);
+        }
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+    else if (normal.z < -0.9) //North
+    {
+        vec2 rotatedUV = nSide.xy + nSide.zw * box.xy;
+        if (nSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = nSide.xy + nSide.zw * box.yx;
+        } else if (nSideRotationAngle == 2.0) {
+            // Rotate UV coordinates 180 degrees clockwise
+            rotatedUV = nSide.xy + nSide.zw * vec2(1.0 - box.x, 1.0 - box.y);
+        } else if (nSideRotationAngle == 3.0) {
+            // Rotate UV coordinates 270 degrees clockwise
+            rotatedUV = nSide.xy + nSide.zw * vec2(1.0 - box.y, box.x);
+        }
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+    else if (normal.y > 0.9) //Up
+    {
+        vec2 rotatedUV = uSide.xy + uSide.zw * box.xy;
+        if (uSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = uSide.xy + uSide.zw * box.yx;
+        } 
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+    else if (normal.y < -0.9) //Down
+    {
+        vec2 rotatedUV = dSide.xy + dSide.zw * box.xy;
+        if (dSideRotationAngle == 1.0) {
+            // Rotate UV coordinates 90 degrees clockwise
+            rotatedUV = dSide.xy + dSide.zw * box.yx;
+        } 
+        col = texture(Sampler0, (rotatedUV) / texSize);
+    }
+
 
     if (col.a < 0.1) return color;
 
