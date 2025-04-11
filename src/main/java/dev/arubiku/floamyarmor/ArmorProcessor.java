@@ -59,7 +59,7 @@ public class ArmorProcessor {
     if (config.getString("vanilla_overrides", "false").equals("false")) {
       writeEquipment(outputFolder);
     }
-    if (config.getStringList("versions").contains("optifine")) {
+    if (config.getStringList("versions").contains("optifine") ||config.getStringList("versions").contains("modded")) {
 
       optifineProcessor.process(outputFolder);
     }
@@ -196,7 +196,7 @@ public class ArmorProcessor {
     if (!config.getString("vanilla_overrides", "false").equals("false")) {
       String vanilla = config.getString("vanilla_overrides", "false");
 
-      if (config.getStringList("versions").contains("1_21_3")) {
+      if (config.getStringList("versions").contains("1_21_3") || config.getStringList("versions").contains("modern")) {
 
         if (layer1.exists()) {
           List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.BLACK));

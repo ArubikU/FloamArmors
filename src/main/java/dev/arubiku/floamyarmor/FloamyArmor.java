@@ -26,6 +26,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -33,6 +34,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.mojang.brigadier.arguments.StringArgumentType;
 
 import dev.arubiku.floamyarmor.VanillaOverrides.ArmorOverrides;
+import io.papermc.paper.ServerBuildInfo;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -161,8 +163,8 @@ public class FloamyArmor extends JavaPlugin {
                     return builder.buildFuture();
                   })
                       .then(Commands.argument("type", StringArgumentType.word()).suggests((context, builder) -> {
-                        List<String> suggestions = Arrays.asList("optifine", "leather", "vanilla", "optifine-vanilla",
-                            "leather-vanilla", "optifine-leather", "optifine-leather-vanilla");
+                        List<String> suggestions = Arrays.asList("modded", "leather", "vanilla", "modded-vanilla",
+                            "leather-vanilla", "modded-leather", "modded-leather-vanilla");
                         suggestions.forEach(builder::suggest);
                         return builder.buildFuture();
                       }))).executes(context -> {
@@ -294,11 +296,11 @@ public class FloamyArmor extends JavaPlugin {
     String[] types = type.toUpperCase().split("-");
     for (String t : types) {
       switch (t) {
-        case "OPTIFINE":
-          helmet = processStack(helmet, armorConfig, ArmorType.OPTIFINE);
-          chestplate = processStack(chestplate, armorConfig, ArmorType.OPTIFINE);
-          leggings = processStack(leggings, armorConfig, ArmorType.OPTIFINE);
-          boots = processStack(boots, armorConfig, ArmorType.OPTIFINE);
+        case "MODDED":
+          helmet = processStack(helmet, armorConfig, ArmorType.MODDED);
+          chestplate = processStack(chestplate, armorConfig, ArmorType.MODDED);
+          leggings = processStack(leggings, armorConfig, ArmorType.MODDED);
+          boots = processStack(boots, armorConfig, ArmorType.MODDED);
           break;
         case "LEATHER":
           helmet = processStack(helmet, armorConfig, ArmorType.LEATHER);
@@ -327,14 +329,14 @@ public class FloamyArmor extends JavaPlugin {
   }
 
   private enum ArmorType {
-    OPTIFINE, LEATHER, VANILLA
+    MODDED, LEATHER, VANILLA
   }
 
   private static NamespacedKey pdc = new NamespacedKey("floamyarmor", "armorcustom");
 
   private ItemStack processStack(ItemStack stack, FileConfiguration config, ArmorType type) {
     switch (type) {
-      case OPTIFINE: {
+      case MODDED: {
         stack.editMeta(meta -> {
           meta.getPersistentDataContainer().set(pdc, PersistentDataType.STRING,
               config.getString("id").replace(":", "_"));
@@ -351,9 +353,27 @@ public class FloamyArmor extends JavaPlugin {
       }
       case VANILLA: {
         stack.editMeta(meta -> {
-          meta.setCustomModelData(config.getInt("custom_model_data", 0));
-        });
+          if(config.contains("custom_model_data")){
 
+            meta.setCustomModelData(config.getInt("custom_model_data", 0));
+          }
+        });
+        //verify version upper than 1.21.1
+        
+        if (ServerBuildInfo.buildInfo().minecraftVersionId().contains("1.21.1")) {
+          stack.editMeta(meta -> {
+            EquippableComponent equippable = meta.getEquippable();
+            if(config.contains("custom_model_data_"+equippable.getSlot().toString().toLowerCase())){
+  
+              meta.setCustomModelData(config.getInt("custom_model_data_"+equippable.getSlot().toString().toLowerCase(), 0));
+            }
+            if(config.contains("model_key"+equippable.getSlot().toString().toLowerCase())){
+  
+              meta.setItemModel(NamespacedKey.fromString(config.getString("model_key"+equippable.getSlot().toString().toLowerCase())));
+            }
+            equippable.setModel(new NamespacedKey("minecraft", config.getString("id").replace(":", "_")));
+          });
+        } 
         return stack;
       }
 
