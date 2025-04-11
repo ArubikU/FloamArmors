@@ -233,17 +233,44 @@ public class ArmorProcessor {
 
       if (config.getStringList("versions").contains("old")) {
 
-            if (layer1.exists()) {
-              List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.BLACK));
-              editImage(layer1, colors,
-                  new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_1", false)));
-            }
-            if (layer2.exists()) {
-              List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.WHITE));
-              editImage(layer2, colors,
-                  new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_2", false)));
-            }
+        if (layer1.exists()) {
+          File mcmetaFileLayer1 = new File(layer1.getParent(), config.getString("vanilla_layer_1").replace(".png", ".png.mcmeta"));
+          if (mcmetaFileLayer1.exists()) {
+        BufferedImage originalImage = ImageIO.read(layer1);
+        BufferedImage emissiveImage = ImageIO.read(new File(layer1.getParent(), config.getString("vanilla_layer_1").replace(".png", "_e.png")));
+        BufferedImage croppedEmissive = emissiveImage.getSubimage(0, 0, 64, 32);
+        File tempEmissiveFile = new File(outputFolder, "temp_emissive_layer1.png");
+        ImageIO.write(croppedEmissive, "png", tempEmissiveFile);
+        applyAlphaFromEmissive(layer1, tempEmissiveFile);
+        tempEmissiveFile.delete();
+        File outputFile = new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_1", false));
+        ImageIO.write(originalImage, "png", outputFile);
+          } else {
+        List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.BLACK));
+        editImage(layer1, colors,
+            new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_1", false)));
           }
+        }
+
+        if (layer2.exists()) {
+          File mcmetaFileLayer2 = new File(layer2.getParent(), config.getString("vanilla_layer_2").replace(".png", ".png.mcmeta"));
+          if (mcmetaFileLayer2.exists()) {
+        BufferedImage originalImage = ImageIO.read(layer2);
+        BufferedImage emissiveImage = ImageIO.read(new File(layer2.getParent(), config.getString("vanilla_layer_2").replace(".png", "_e.png")));
+        BufferedImage croppedEmissive = emissiveImage.getSubimage(0, 0, 64, 32);
+        File tempEmissiveFile = new File(outputFolder, "temp_emissive_layer2.png");
+        ImageIO.write(croppedEmissive, "png", tempEmissiveFile);
+        applyAlphaFromEmissive(layer2, tempEmissiveFile);
+        tempEmissiveFile.delete();
+        File outputFile = new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_2", false));
+        ImageIO.write(originalImage, "png", outputFile);
+          } else {
+        List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.WHITE));
+        editImage(layer2, colors,
+            new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_2", false)));
+          }
+        }
+      }
       return;
     }
 
