@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import dev.arubiku.floamyarmor.VanillaOverrides.ArmorOverrides;
-import dev.arubiku.floamyarmor.Utils;
 
 public class OptifineProcessor {
 
@@ -45,11 +44,10 @@ public class OptifineProcessor {
   }
 
   private void copyTextureFiles(File outputFolder) throws IOException {
-
-    File optifinelayer1 = new File(armorFolder,
-        this.config.getString("optifine_layer_1_texture", this.config.getString("vanilla_layer_1", "layer_1.png")));
-    File optifinelayer2 = new File(armorFolder,
-        this.config.getString("optifine_layer_2_texture", this.config.getString("vanilla_layer_2", "layer_2.png")));
+    String layer1Path = this.config.getString("optifine_layer_1_texture", this.config.getString("vanilla_layer_1", "layer_1.png"));
+    String layer2Path = this.config.getString("optifine_layer_2_texture", this.config.getString("vanilla_layer_2", "layer_2.png"));
+    File optifinelayer1 = new File(armorFolder, layer1Path);
+    File optifinelayer2 = new File(armorFolder, layer2Path);
     File folder = new File(outputFolder, "textures/armor/" + armorName + "/");
     if (!folder.exists()) {
       folder.mkdirs();
@@ -57,11 +55,32 @@ public class OptifineProcessor {
     if (optifinelayer1.exists()) {
       Files.copy(optifinelayer1.toPath(),
           new File(outputFolder, "textures/armor/" + armorName + "/layer_1.png").toPath());
-
+      copyAdditionalFiles(optifinelayer1, outputFolder, "layer_1");
     }
     if (optifinelayer2.exists()) {
       Files.copy(optifinelayer2.toPath(),
           new File(outputFolder, "textures/armor/" + armorName + "/layer_2.png").toPath());
+      copyAdditionalFiles(optifinelayer2, outputFolder, "layer_2");
+    }
+  }
+
+  private void copyAdditionalFiles(File originalFile, File outputFolder, String layerName) throws IOException {
+    String baseName = originalFile.getName().replace(".png", "");
+    File emissiveFile = new File(originalFile.getParent(), baseName + "_e.png");
+    File mcmetaFile = new File(originalFile.getParent(), baseName + ".png.mcmeta");
+    File emissiveMcmetaFile = new File(originalFile.getParent(), baseName + "_e.png.mcmeta");
+
+    if (emissiveFile.exists()) {
+      Files.copy(emissiveFile.toPath(),
+          new File(outputFolder, "textures/armor/" + armorName + "/" + layerName + "_e.png").toPath());
+    }
+    if (mcmetaFile.exists()) {
+      Files.copy(mcmetaFile.toPath(),
+          new File(outputFolder, "textures/armor/" + armorName + "/" + layerName + ".png.mcmeta").toPath());
+    }
+    if (emissiveMcmetaFile.exists()) {
+      Files.copy(emissiveMcmetaFile.toPath(),
+          new File(outputFolder, "textures/armor/" + armorName + "/" + layerName + "_e.png.mcmeta").toPath());
     }
   }
 

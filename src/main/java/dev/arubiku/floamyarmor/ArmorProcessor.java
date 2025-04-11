@@ -155,6 +155,29 @@ public class ArmorProcessor {
     }
   }
 
+  private void applyAlphaFromEmissive(File original, File emissive) throws IOException {
+    BufferedImage originalImage = ImageIO.read(original);
+    BufferedImage emissiveImage = ImageIO.read(emissive);
+
+    if (originalImage.getWidth() != emissiveImage.getWidth() || originalImage.getHeight() != emissiveImage.getHeight()) {
+      throw new IllegalArgumentException("Original and emissive images must have the same dimensions.");
+    }
+
+    for (int x = 0; x < originalImage.getWidth(); x++) {
+      for (int y = 0; y < originalImage.getHeight(); y++) {
+        int emissivePixel = emissiveImage.getRGB(x, y);
+        if ((emissivePixel >> 24) != 0x00) { // Check if emissive pixel is not fully transparent
+          int originalPixel = originalImage.getRGB(x, y);
+          int newAlpha = 128 << 24; // Set alpha to 128
+          int newPixel = (originalPixel & 0x00FFFFFF) | newAlpha; // Combine RGB with new alpha
+          originalImage.setRGB(x, y, newPixel);
+        }
+      }
+    }
+
+    ImageIO.write(originalImage, "png", original);
+  }
+
   private void copyTextures(File outputFolder) throws IOException {
 
     File layer1 = plugin.getDataFolder().toPath()
@@ -179,26 +202,48 @@ public class ArmorProcessor {
           List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.BLACK));
           editImage(layer1, colors,
               new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_1", true)));
-        }
-        if (layer2.exists()) {
-          List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.WHITE));
-          editImage(layer2, colors,
+
+          File emissiveLayer1 = new File(layer1.getParent(), config.getString("vanilla_layer_1").replace(".png", "_e.png"));
+            if (emissiveLayer1.exists()) {
+            applyAlphaFromEmissive(new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_1", true)), emissiveLayer1);
+            File mcmetaFile = new File(emissiveLayer1.getParent(), config.getString("vanilla_layer_1").replace(".png", ".png.mcmeta"));
+            if (mcmetaFile.exists()) {
+              Files.copy(mcmetaFile.toPath(),
+                new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_1", true) + ".mcmeta").toPath());
+            }
+            }
+          }
+
+          if (layer2.exists()) {
+            List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.WHITE));
+            editImage(layer2, colors,
               new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_2", true)));
-        }
-      }
+
+            File emissiveLayer2 = new File(layer2.getParent(), config.getString("vanilla_layer_2").replace(".png", "_e.png"));
+            if (emissiveLayer2.exists()) {
+            applyAlphaFromEmissive(new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_2", true)), emissiveLayer2);
+            File mcmetaFile = new File(emissiveLayer2.getParent(), config.getString("vanilla_layer_2").replace(".png", ".png.mcmeta"));
+            if (mcmetaFile.exists()) {
+              Files.copy(mcmetaFile.toPath(),
+                new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_2", true) + ".mcmeta").toPath());
+            }
+            }
+          }
+          }
+
       if (config.getStringList("versions").contains("old")) {
 
-        if (layer1.exists()) {
-          List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.BLACK));
-          editImage(layer1, colors,
-              new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_1", false)));
-        }
-        if (layer2.exists()) {
-          List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.WHITE));
-          editImage(layer2, colors,
-              new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_2", false)));
-        }
-      }
+            if (layer1.exists()) {
+              List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.BLACK));
+              editImage(layer1, colors,
+                  new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_1", false)));
+            }
+            if (layer2.exists()) {
+              List<ColorApplier> colors = List.of(new ColorApplier(63, 30, Color.WHITE));
+              editImage(layer2, colors,
+                  new File(outputFolder, VanillaOverrides.getArmorTexturePath(vanilla, "layer_2", false)));
+            }
+          }
       return;
     }
 

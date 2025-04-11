@@ -105,10 +105,14 @@ void main() {
     }
     if (dynamicEmissive == 0) color *= ColorModulator;
 
-    if (dynamicEmissive == 1) {
+    if (dynamicEmissive == 1 || opacity == 128) {
         fragColor = color;
     } else {
         fragColor = linear_fog(color, vDistance, FogStart, FogEnd, FogColor);
+    }
+
+    if(opacity==128){
+        fragColor .a = 1;
     }
     if (transparency < 1 && dynamicEmissive != 1 && isGui == 0) {
         fragColor.a = transparency;
