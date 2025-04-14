@@ -19,7 +19,7 @@ in ivec2 UV1, UV2;
 uniform mat3 IViewRotMat;
 in vec3 Normal;
 
-uniform sampler2D Sampler0, Sampler2;
+uniform sampler2D Sampler0,Sampler1, Sampler2;
 uniform mat4 ModelViewMat, ProjMat;
 uniform int FogShape;
 uniform vec3 Light0_Direction, Light1_Direction;
@@ -35,6 +35,9 @@ out vec4 cem_pos1, cem_pos2, cem_pos3, cem_pos4;
 out vec3 cem_glPos;
 out vec3 cem_uv1, cem_uv2;
 out vec4 cem_lightMapColor;
+
+out vec4 overlayColor;
+
 flat out int cem;
 flat out int bodypart;
 flat out int cem_reverse;
@@ -46,6 +49,7 @@ flat out int armorType;
 flat out int isGui;
 flat out int isUpperArmor;
 flat out int markforremove;
+flat out int isTrim;
 out vec4 cem_color;
 
 float getChannel(ivec2 cords, int channel) {
@@ -96,6 +100,7 @@ float getChannel(ivec2 rcords, ivec2 icords, int channel)
 
 void main() {
     cem_color = vec4(0,1,0,1);
+    isTrim = 0;
     // GUI detection
     isGui = (ProjMat[2][3] == 0.0) ? 1 : 0;
     vec3 pos = Position;
@@ -104,6 +109,7 @@ void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
     #moj_import <fog_reader.glsl>
     normal = ProjMat * ModelViewMat * vec4(Normal, 0.0);
+    overlayColor = texelFetch(Sampler1, UV1, 0);
 
     lightColor = texelFetch(Sampler2, UV2 / 16, 0);
     texCoord0 = UV0;
@@ -111,7 +117,8 @@ void main() {
     markforremove = 0;
     // Armor-specific logic
     RelativeCords = ivec2(0);
-    if (true) {
+    
+    if (overlayColor.a > 0.0) {
         ivec2 atlasSize = textureSize(Sampler0, 0);
         vec2 armorAmount = vec2(atlasSize) * vec2(INV_TEX_RES_SIX, INV_TEX_RES_THREE);
         vec2 offset = 1.0 / armorAmount;
@@ -176,6 +183,7 @@ void main() {
             if(removeAll==1){
                 markforremove = 1;
                 gl_Position = vec4(0,0,0,1);
+                overlayColor = vec4(0,0,0,0);
                 return;
             }else{
               bodypart = -1;

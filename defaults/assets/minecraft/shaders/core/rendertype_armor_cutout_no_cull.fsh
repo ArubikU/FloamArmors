@@ -38,6 +38,8 @@ flat in float cem_size;
 flat in int isGui;
 flat in ivec2 RelativeCords;
 flat in int markforremove;
+flat in int isTrim;
+in vec4 overlayColor;
 
 out vec4 fragColor;
 
@@ -56,6 +58,12 @@ void main() {
     vec2 texSize = textureSize(Sampler0, 0);
     bool isHead = (texCoord0 * texSize).y <= 16;
     vec4 color = texture(Sampler0, texCoord0);
+        color *= ColorModulator;
+        color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);
+    
+
+
+
     float dynamicEmissive = emissive;
 
     if (cem > 1) {
@@ -88,7 +96,6 @@ void main() {
     }
     
     float opacity = ceil(color.a * 255);
-
     if (cem < 1) {  
         if (color.a < 0.1) discard;
         
@@ -105,14 +112,10 @@ void main() {
     }
     if (dynamicEmissive == 0) color *= ColorModulator;
 
-    if (dynamicEmissive == 1 || opacity == 128) {
+    if (dynamicEmissive == 1) {
         fragColor = color;
     } else {
         fragColor = linear_fog(color, vDistance, FogStart, FogEnd, FogColor);
-    }
-
-    if(opacity==128){
-        fragColor .a = 1;
     }
     if (transparency < 1 && dynamicEmissive != 1 && isGui == 0) {
         fragColor.a = transparency;
